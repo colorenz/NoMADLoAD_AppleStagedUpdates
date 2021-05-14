@@ -16,31 +16,18 @@ PreUpgrade() {
 ## Backup and reset loginwindow
 
 # Backup loginwindow settings
-/usr/bin/security authorizationdb read system.login.console > \
-    /var/db/.loginwindow_authdb_bkp.xml
-    
+
 # Revert loginwindow to macOS default
-rm /var/db/auth.db
+/usr/local/bin/authchanger -reset
 
 return 0
 }
 
 PostUpgrade() {
 #!/bin/bash
-## Restore loginwindow to previous setup
+## Restore loginwindow to jamfconnect
 
-# Get the authorizationdb values for comparison
-curr_authdb=$(/usr/bin/security -q authorizationdb read system.login.console | \
-                sed '1,/<array>/d;/<\/array>/,$d')
-bkp_authdb=$(cat /var/db/.loginwindow_authdb_bkp.xml | \
-                sed '1,/<array>/d;/<\/array>/,$d')
-
-# Restores previous loginwindow settings
-if [[ ${curr_authdb} != ${bkp_authdb} ]]; then
-    /usr/bin/security authorizationdb write system.login.console < \
-        /var/db/.loginwindow_authdb_bkp.xml
-    rm /var/db/.loginwindow_authdb_bkp.xml
-fi
+/usr/local/bin/authchanger -reset -jamfconnect
 
 return 0
 }
@@ -48,9 +35,9 @@ return 0
 MigrationComplete() {
 #!/bin/bash
 ## migrationcomplete
-
 # add your commands here or call script(s)
-
+#reboot for Rosetta 2 and Defender ATP to work...
+sudo shutdown -h +3
 return 0
 }
 
