@@ -9,6 +9,11 @@
 #
 # Source: https://github.com/kennyb-222/NoMADLoAD_AppleStagedUpdates/
 # Author: Kenny Botelho
+# changes: 
+# for m1 beacuse m1 needs often more tries to update.
+# Rosetta 2 and Defender ATP needs a reboot after update.
+
+
 
 # Upgrade Hooks
 PreUpgrade() {
