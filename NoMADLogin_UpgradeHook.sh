@@ -1,6 +1,6 @@
 #!/bin/bash
 # macOSUpgradeHooks - Restore loginwindow mechanisms
-# Supports loginwindow plug-ins such as Jamf Connect Login
+# Supports loginwindow plug-ins such as  NoMAD Login AD and Jamf Connect Login
 # Resets loginwindow prior to macOS updates and upgrades
 #
 ## Allows macOS to complete the "last mile" migration updates
@@ -9,36 +9,38 @@
 #
 # Source: https://github.com/kennyb-222/NoMADLoAD_AppleStagedUpdates/
 # Author: Kenny Botelho
-# changes: colorenz
-# 20210515: Changes to work with JCL only for m1 beacuse m1 needs often more tries to update.
-# 20210516: Implent a reboot POP to fix Network Extensions Problems such as Defender or trend Micro 
-# https://macadmins.slack.com/archives/CH7CGG16Y/p1619529274149000?thread_ts=1619528662.148700&cid=CH7CGG16Y
-
-#LogFile
-LogFile="/var/log/update.log"
-#Log Function
-logger() {
-    /bin/echo $(date "+%Y-%m-%d %H:%M:%S ") $1 >>"${LogFile}"
-
-}
 
 # Upgrade Hooks
 PreUpgrade() {
 #!/bin/bash
+## Backup and reset loginwindow
 
+# Backup loginwindow settings
+/usr/bin/security authorizationdb read system.login.console > \
+    /var/db/.loginwindow_authdb_bkp.xml
+    
 # Revert loginwindow to macOS default
+rm /var/db/auth.db
 
-/usr/local/bin/authchanger -reset
-logger "Changed loginwindow to macOS default in PreUpgrade" 
 return 0
 }
 
 PostUpgrade() {
 #!/bin/bash
-## Restore loginwindow to jamfconnect
+## Restore loginwindow to previous setup
 
-/usr/local/bin/authchanger -reset -jamfconnect
-logger "Changed loginwindow to jamfconnect in PostUpgrade" 
+# Get the authorizationdb values for comparison
+curr_authdb=$(/usr/bin/security -q authorizationdb read system.login.console | \
+                sed '1,/<array>/d;/<\/array>/,$d')
+bkp_authdb=$(cat /var/db/.loginwindow_authdb_bkp.xml | \
+                sed '1,/<array>/d;/<\/array>/,$d')
+
+# Restores previous loginwindow settings
+if [[ ${curr_authdb} != ${bkp_authdb} ]]; then
+    /usr/bin/security authorizationdb write system.login.console < \
+        /var/db/.loginwindow_authdb_bkp.xml
+    rm /var/db/.loginwindow_authdb_bkp.xml
+fi
 
 return 0
 }
@@ -46,12 +48,8 @@ return 0
 MigrationComplete() {
 #!/bin/bash
 ## migrationcomplete
-# add your commands here or call script(s)
-# reboot for  Defender Network Extension to work
 
-"/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper" -windowType utility -countdownPrompt "Dein Mac startet neu in " -countdown -timeout 120 -alignCountdown natural -alignCountdown center  -title Update -description "Um das Update abzuschließen, wird dein Mac in 2 Minuten noch einmal neugestartet." -alignDescription natural -icon /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/ToolbarInfo.icns  -iconSize 150 -button1 OK -defaultButton 1
-logger "Start reboot to fix Defender ATP after Update" 
-osascript -e 'tell app "Finder" to restart'
+# add your commands here or call script(s)
 
 return 0
 }
@@ -59,10 +57,6 @@ return 0
 #####################################
 #   DO NOT MODIFY BELOW THIS LINE   #
 #####################################
-
-    logger "---------------------------------------------------------" >> /var/log/update.log
-    logger "Start Upgrade Hocks" 
-
 
 Install() {
     # Copy script to destination path
@@ -100,8 +94,6 @@ EOF
     
     # Load LaunchDaemon
     /bin/launchctl load ${PlistPath}
-    logger "Installed Upgrade Hocks" 
-
 }
 
 FetchUpgradeInfo() {
@@ -130,8 +122,6 @@ Uninstall() {
     echo "removing AppleUpgradeHooks..."
     rm ${ScriptPath} ${PlistPath}
     /bin/launchctl remove com.AppleUpgrade.Hooks
-    logger "Uninstalled Upgrade Hocks" 
-
 }
 
 # Set environment
@@ -180,7 +170,5 @@ elif [[ ! -f /private/var/db/.StagedAppleUpgrade ]] &&
     # Perform post-upgrade-login actions
     MigrationComplete
 fi
-    logger "End Upgrade Hocks" 
-    logger "---------------------------------------------------------" 
 
 exit 0
