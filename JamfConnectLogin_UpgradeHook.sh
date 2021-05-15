@@ -10,6 +10,7 @@
 # Source: https://github.com/kennyb-222/NoMADLoAD_AppleStagedUpdates/
 # Author: Kenny Botelho
 # changes: colorenz
+# 20210515: Logfile added
 # 20210515: Because there are problems with the m1 and you have to start the update more often I just use change PreUpgrade and PostUpgrade commands to authchanger 
 #           -rest and authchanger -rest -JamfConnect
 # 20210516: Implent a reboot POPUO to fix Network Extensions Problems after upgrade such as Defender or trend Micro 
