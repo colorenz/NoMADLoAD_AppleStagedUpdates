@@ -10,8 +10,9 @@
 # Source: https://github.com/kennyb-222/NoMADLoAD_AppleStagedUpdates/
 # Author: Kenny Botelho
 # changes: colorenz
-# 20210515: Changes to work with JCL only for m1 beacuse m1 needs often more tries to update.
-# 20210516: Implent a reboot POP to fix Network Extensions Problems such as Defender or trend Micro 
+# 20210515: Because there are problems with the m1 and you have to start the update more often I just use change PreUpgrade and PostUpgrade commands to authchanger 
+#           -rest and authchanger -rest -JamfConnect
+# 20210516: Implent a reboot POPUO to fix Network Extensions Problems after upgrade such as Defender or trend Micro 
 # https://macadmins.slack.com/archives/CH7CGG16Y/p1619529274149000?thread_ts=1619528662.148700&cid=CH7CGG16Y
 
 #LogFile
