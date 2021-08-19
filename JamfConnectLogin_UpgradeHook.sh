@@ -9,11 +9,8 @@
 #
 # Source: https://github.com/kennyb-222/NoMADLoAD_AppleStagedUpdates/
 # Author: Kenny Botelho
-# changes: colorenz
-# 20210515: Logfile added
-# 20210515: Because there are problems with the m1 and you have to start the update more often I just use change PreUpgrade and PostUpgrade commands to authchanger 
-#           -rest and authchanger -rest -JamfConnect
-# 20210516: Implent a reboot POPUO to fix Network Extensions Problems after upgrade such as Defender or trend Micro 
+# 20210515: Changes to work with JCL only for m1 beacuse m1 needs often more tries to update.
+# 20210516: Implent a reboot POP to fix Network Extensions Problems such as Defender or trend Micro 
 # https://macadmins.slack.com/archives/CH7CGG16Y/p1619529274149000?thread_ts=1619528662.148700&cid=CH7CGG16Y
 
 #LogFile
@@ -32,6 +29,14 @@ PreUpgrade() {
 
 /usr/local/bin/authchanger -reset
 logger "Changed loginwindow to macOS default in PreUpgrade" 
+
+authchanger=$(authchanger -print)
+logger "authchangerconfig: $authchanger"
+
+# Disable Defender ATP before Update
+defenderatp=$(mdatp system-extension network-filter disable)
+logger "Defender ATP Networkfilter disabeld: $defenderatp"
+
 return 0
 }
 
@@ -42,6 +47,9 @@ PostUpgrade() {
 /usr/local/bin/authchanger -reset -jamfconnect
 logger "Changed loginwindow to jamfconnect in PostUpgrade" 
 
+authchanger=$(authchanger -print)
+logger "authchangerconfig: $authchanger"
+
 return 0
 }
 
@@ -50,10 +58,23 @@ MigrationComplete() {
 ## migrationcomplete
 # add your commands here or call script(s)
 # reboot for  Defender Network Extension to work
+"/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper" -windowType utility -countdownPrompt "Reboot in " -countdown -timeout 300 -alignCountdown natural -alignCountdown center  -title Update -description "Reboot in 5 Minutes" -alignDescription natural -icon /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/ToolbarInfo.icns  -iconSize 150 -button1 OK -defaultButton 1
 
-"/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper" -windowType utility -countdownPrompt "Your Mac will restart in " -countdown -timeout 120 -alignCountdown natural -alignCountdown center  -title Update -description "Your Mac will restart again to complete the update." -alignDescription natural -icon /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/ToolbarInfo.icns  -iconSize 150 -button1 OK -defaultButton 1
-logger "Start reboot to fix Defender ATP after Update" 
-osascript -e 'tell app "Finder" to restart'
+# Reinstall Rosetta after Update
+ processor=$(/usr/sbin/sysctl -n machdep.cpu.brand_string | grep -o "Apple")
+  if [[ -n "$processor" ]]; then
+    rosetta=$(/usr/sbin/softwareupdate --install-rosetta --agree-to-license)
+    logger "Rosetta reinstall: $rosetta"
+  else
+      logger "Intel nothing to do reinstall"
+
+  fi
+
+logger "Start reboot to fix Rosetta / Defender ATP after Update" 
+sleep 120
+logger "Boom, Bye Bye" 
+shutdown -r now
+#osascript -e 'tell app "Finder" to restart'
 
 return 0
 }
@@ -64,8 +85,6 @@ return 0
 
     logger "---------------------------------------------------------" >> /var/log/update.log
     logger "Start Upgrade Hocks" 
-
-
 Install() {
     # Copy script to destination path
     cp "$0" ${ScriptPath}
