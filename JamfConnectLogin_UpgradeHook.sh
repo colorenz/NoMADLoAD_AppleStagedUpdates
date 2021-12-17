@@ -10,7 +10,7 @@
 # Source: https://github.com/kennyb-222/NoMADLoAD_AppleStagedUpdates/
 # Author: Kenny Botelho
 # 20210515: Changes to work with JCL only for m1 beacuse m1 needs often more tries to update.
-# 20210516: Implent a reboot POP to fix Network Extensions Problems such as Defender or trend Micro 
+# 20210516: Implent a reboot POPUP to fix Network Extensions Problems such as Defender or trend Micro 
 # https://macadmins.slack.com/archives/CH7CGG16Y/p1619529274149000?thread_ts=1619528662.148700&cid=CH7CGG16Y
 
 #LogFile
@@ -33,9 +33,6 @@ logger "Changed loginwindow to macOS default in PreUpgrade"
 authchanger=$(authchanger -print)
 logger "authchangerconfig: $authchanger"
 
-# Disable Defender ATP before Update
-defenderatp=$(mdatp system-extension network-filter disable)
-logger "Defender ATP Networkfilter disabeld: $defenderatp"
 
 return 0
 }
@@ -57,7 +54,7 @@ MigrationComplete() {
 #!/bin/bash
 ## migrationcomplete
 # add your commands here or call script(s)
-# reboot for  Defender Network Extension to work
+
 "/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper" -windowType utility -countdownPrompt "Reboot in " -countdown -timeout 300 -alignCountdown natural -alignCountdown center  -title Update -description "Reboot in 5 Minutes" -alignDescription natural -icon /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/ToolbarInfo.icns  -iconSize 150 -button1 OK -defaultButton 1
 
 # Reinstall Rosetta after Update
@@ -70,7 +67,7 @@ MigrationComplete() {
 
   fi
 
-logger "Start reboot to fix Rosetta / Defender ATP after Update" 
+logger "Start reboot to fix Rosetta" 
 sleep 120
 logger "Boom, Bye Bye" 
 shutdown -r now
