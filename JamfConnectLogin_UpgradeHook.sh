@@ -55,9 +55,7 @@ MigrationComplete() {
 ## migrationcomplete
 # add your commands here or call script(s)
 
-"/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper" -windowType utility -countdownPrompt "Reboot in " -countdown -timeout 300 -alignCountdown natural -alignCountdown center  -title Update -description "Reboot in 5 Minutes" -alignDescription natural -icon /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/ToolbarInfo.icns  -iconSize 150 -button1 OK -defaultButton 1
-
-# Reinstall Rosetta after Update
+#Reinstall Rosetta after Update
  processor=$(/usr/sbin/sysctl -n machdep.cpu.brand_string | grep -o "Apple")
   if [[ -n "$processor" ]]; then
     rosetta=$(/usr/sbin/softwareupdate --install-rosetta --agree-to-license)
@@ -66,12 +64,6 @@ MigrationComplete() {
       logger "Intel nothing to do reinstall"
 
   fi
-
-logger "Start reboot to fix Rosetta" 
-sleep 120
-logger "Boom, Bye Bye" 
-shutdown -r now
-#osascript -e 'tell app "Finder" to restart'
 
 return 0
 }
