@@ -24,7 +24,7 @@ This script will automatically engage when macOS updates or upgrades are staged 
 `sudo /bin/bash /private/var/db/.AppleUpgradeHooks.sh "uninstall"`
 
 ##### Notes
-Tested on (11.2 - 11.3.x) macOS release updates
+Tested on (11.2 - 12.5.x) macOS release updates
 
 This was created from the "macOSUpgradeHooks" project
 https://github.com/kennyb-222/macOSUpgradeHooks
